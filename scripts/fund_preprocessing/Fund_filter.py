@@ -392,22 +392,22 @@ def filter_BOOKs_items(data):
     
 
     # Filter items belong to `CHILD` fund
-    child = utils_fund.filter_items_by_keywords(books, CALLNUMBER, child_callnumber)
+    child = books[books[CALLNUMBER].isin(child_callnumber)]
     books = books[~books[ITEM].isin(child[ITEM])]
     data = data[~data[ITEM].isin(child[ITEM])]
 
     # Filter items belong to `JFIC` fund
-    jfic = utils_fund.filter_items_by_keywords(books, CALLNUMBER, jfic_callnumber)
+    jfic = books[books[CALLNUMBER].isin(jfic_callnumber)]
     books = books[~books[ITEM].isin(jfic[ITEM])]
     data = data[~data[ITEM].isin(jfic[ITEM])]
 
     # Filter items belong to `YFIC` fund
-    yfic = utils_fund.filter_items_by_keywords(books, CALLNUMBER, yfic_callnumber)
+    yfic = books[books[CALLNUMBER].isin(yfic_callnumber)]
     books = books[~books[ITEM].isin(yfic[ITEM])]
     data = data[~data[ITEM].isin(yfic[ITEM])]
 
     # Filter items belong to `AFIC` fund
-    afic = utils_fund.filter_items_by_keywords(books, CALLNUMBER, afic_callnumber)
+    afic = books[books[CALLNUMBER].isin(afic_callnumber)]
     books = books[~books[ITEM].isin(afic[ITEM])]
     data = data[~data[ITEM].isin(afic[ITEM])]
 
@@ -425,8 +425,7 @@ def filter_BOOKs_items(data):
     data = data[~data[ITEM].isin(jnf[ITEM])]
 
     # Filter items belong to `YNF` fund
-    ynf = utils_fund.filter_items_by_keywords(books, CALLNUMBER, ynf_callnumber, 
-                                              Exceptional_keywords)
+    ynf = books[books[CALLNUMBER].isin(ynf_callnumber)]
     ynf_subset = utils_fund.filter_items_by_keywords(books, Sub_callnumber, ynf_callnumber, 
                                               Exceptional_keywords)
     ynf = pd.concat([ynf, ynf_subset], ignore_index=True).reset_index(drop=True)
@@ -438,8 +437,7 @@ def filter_BOOKs_items(data):
     anf_list = list()
 
     for val1, val2, val3, val4 in zip(anf_callnumber_1, anf_callnumber_2, anf_callnumber_3, anf_callnumber_4):
-        anf_subset = utils_fund.filter_items_by_keywords(books, CALLNUMBER, 
-                                                         [val1, val2, val3, val4], Exceptional_keywords)
+        anf_subset = books[books[CALLNUMBER].isin([val1, val2, val3, val4])]
         anf_subset_cn = utils_fund.filter_items_by_keywords(books, Sub_callnumber, 
                                                          [val1, val2, val3, val4], Exceptional_keywords)
         anf_subset = pd.concat([anf_subset, anf_subset_cn], ignore_index=True).reset_index(drop=True)
@@ -463,7 +461,7 @@ def filter_all_items(data, save_path, fiscalyr):
     data = data[~data[ITEM].isin(periodical[ITEM])]
 
     # Filter `Large Print` items first
-    bkslp = utils_fund.filter_items_by_keywords(data, CALLNUMBER, [".* LARGE PRINT.*", ".* LP"])
+    bkslp = data[data[CALLNUMBER].isin([".* LARGE PRINT.*", ".* LP"])]
     # Filter items left
     data = data[~data[ITEM].isin(bkslp[ITEM])]
 
@@ -530,92 +528,3 @@ def filter_all_items(data, save_path, fiscalyr):
                  "yfic": yfic, "jnf": jnf, "ynf": ynf, "periodical": periodical}
 
     return anf_list, fund_list
-
-
-
-def iterate_filter_by_fund(fund, sub_fund, active_only, fy_inactive):
-    """
-    """
-    # Filter only active items for fund processing
-    if sub_fund.shape[0] > 0:
-        active_items, inactive_items = filter_items_status.filter_items_by_status(sub_fund)
-    else:
-        active_items, inactive_items = pd.DataFrame(), pd.DataFrame()
-
-    if (fy_inactive != "None") and fy_inactive.isdigit():
-        start_date = f"{int(fy_inactive)-1}-07-01"
-        end_date = f"{fy_inactive}-07-01"
-        inactive_items = inactive_items[(inactive_items[STATUSDATE] >= start_date) & 
-                                        (inactive_items[STATUSDATE] < end_date)]
-    
-    # Extract the total fund info
-    if active_only and (active_items.shape[0] > 0):
-        sub_fund_info = utils_fund.calculate_single_fund_info(fund, active_items, inactive_items)
-    else:
-        sub_fund_info = utils_fund.calculate_single_fund_info(fund, sub_fund, inactive_items)
-
-    return sub_fund_info
-
-
-def extract_fund_info(data, data_fields, save_path, fiscalyr="2025", 
-                      active_only=False, fy_inactive="None"):
-    """
-    """
-    # Remove all items that are excluded based on their medias and locations
-    data = remove_unnecesary_items(data, locations=Excluded_locations, medias=Excluded_medias)
-
-    # Convert `STATUSDATE` column from string to datetime
-    data[STATUSDATE] = utils.convert_str_to_datetime(data[STATUSDATE])
-
-    # Filter items by their funds
-    anf_list, fund_dict = filter_all_items(data, save_path, fiscalyr)
-
-    total_fund_df = pd.DataFrame(columns=data_fields)
-
-    for idx, sub_fund in enumerate(anf_list):
-        fund = f"ANF-{idx}"
-
-        print(fund)
-
-        sub_fund_info = iterate_filter_by_fund(fund, sub_fund, active_only, fy_inactive)
-
-        # Add sub_fund_info to the total_fund_df       
-        total_fund_df.loc[len(total_fund_df)] = sub_fund_info
-    
-
-    for key, sub_fund in fund_dict.items():
-        fund = key.upper()
-
-        print(fund)
-
-        sub_fund_info = iterate_filter_by_fund(fund, sub_fund, active_only, fy_inactive)
-
-        # Add sub_fund_info to the total_fund_df       
-        total_fund_df.loc[len(total_fund_df)] = sub_fund_info
-
-    
-    # Calculate total fund info
-    _, fy_info = utils_fund.calculate_multiple_fund_info(total_fund_df)
-
-    # Add fy_info into the total_fund_df
-    total_fund_df = pd.concat([total_fund_df, fy_info], axis=1)
-
-    
-    return total_fund_df
-
-
-
-
-if __name__ == "__main__":
-    print('Hello!')
-
-    data = pd.read_csv('data/Monthly_items_info/Items_2026-06-30_1125pm.csv', 
-                       encoding='latin-1', low_memory=False)
-    data_fields = ['Fund', 'Volumes', 'FY Circs', 'Lifetime Circs', 
-                   'Total Price', 'FY WLMT']
-    save_path = './data_save/Fund2026/Monthly reports/Jun2026'
-    fiscalyr = "2026"
-    active_only = False
-    fy_inactive = "None"
-
-    extract_fund_info(data, data_fields, save_path, fiscalyr, active_only, fy_inactive)
