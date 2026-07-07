@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 
 import utils
-import utils_fund
-import filter_items_status
+# import utils_fund
+# import filter_items_status
 
 # Setup the global values
 LOCATION = "LOCATION"
@@ -102,13 +102,13 @@ def filter_AMP_items(data: pd.DataFrame) -> list[pd.DataFrame]:
     media_2 = ["0.*", "2.*", "4.*", "5.*", "7.*", "8.*"]  
 
     # Filter items belong to `AMP-J` fund
-    amp_j = utils_fund.filter_items_by_keywords(amp, CALLNUMBER, j_media)
+    amp_j = amp[amp[CALLNUMBER].isin(j_media)]
     # Filter items left
     amp = amp[~amp[ITEM].isin(amp_j[ITEM])]
     data = data[~data[ITEM].isin(amp_j[ITEM])]
 
     # Filter items belong to `AMP-A` fund
-    amp_a = utils_fund.filter_items_by_keywords(amp, CALLNUMBER, a_media)
+    amp_a = amp[amp[amp[CALLNUMBER].isin(a_media)]]
     # Filter items left
     amp = amp[~amp[ITEM].isin(amp_a[ITEM])]
     data = data[~data[ITEM].isin(amp_a[ITEM])]
@@ -117,37 +117,43 @@ def filter_AMP_items(data: pd.DataFrame) -> list[pd.DataFrame]:
     amp[Sub_callnumber] = utils_fund.split_string_value(amp[CALLNUMBER])
 
     # Filter items belong to `AMP-C` fund
-    amp_c = utils_fund.filter_items_by_keywords(amp, CALLNUMBER, c_media)
+    amp_c = amp[amp[CALLNUMBER].isin(c_media)]
+
     amp_c_subset = utils_fund.filter_items_by_keywords(amp, Sub_callnumber, c_media)
     amp_c = pd.concat([amp_c, amp_c_subset], ignore_index=True).reset_index(drop=True)
     amp_c = amp_c.drop_duplicates(subset=[ITEM], keep='first').reset_index(drop=True)
+
     # Filter items left
     amp = amp[~amp[ITEM].isin(amp_c[ITEM])]
     data = data[~data[ITEM].isin(amp_c[ITEM])]
 
     # Filter items belong to `AMP-Y` fund
-    amp_y = utils_fund.filter_items_by_keywords(amp, CALLNUMBER, y_media)
+    amp_y = amp[amp[CALLNUMBER].isin(y_media)]
+
     amp_y_subset = utils_fund.filter_items_by_keywords(amp, Sub_callnumber, y_media)
     amp_y = pd.concat([amp_y, amp_y_subset], ignore_index=True).reset_index(drop=True)
     amp_y = amp_y.drop_duplicates(subset=[ITEM], keep='first').reset_index(drop=True)
+
     # Filter items left
     amp = amp[~amp[ITEM].isin(amp_y[ITEM])]
     data = data[~data[ITEM].isin(amp_y[ITEM])]
 
     # Filter items belong to `AMP-1` fund
-    amp_1 = utils_fund.filter_items_by_keywords(amp, CALLNUMBER, media_1)
+    amp_1 = amp[amp[CALLNUMBER].isin(media_1)]
     amp_1_subset = utils_fund.filter_items_by_keywords(amp, Sub_callnumber, media_1)
     amp_1 = pd.concat([amp_1, amp_1_subset], ignore_index=True).reset_index(drop=True)
     amp_1 = amp_1.drop_duplicates(subset=[ITEM], keep='first').reset_index(drop=True)
+
     # Filter items left
     amp = amp[~amp[ITEM].isin(amp_1[ITEM])]
     data = data[~data[ITEM].isin(amp_1[ITEM])]
 
     # Filter items belong to `AMP-2` fund
-    amp_2 = utils_fund.filter_items_by_keywords(amp, CALLNUMBER, media_2)
+    amp_2 = amp[amp[CALLNUMBER].isin(media_2)]
     amp_2_subset = utils_fund.filter_items_by_keywords(amp, Sub_callnumber, media_2)
     amp_2 = pd.concat([amp_2, amp_2_subset], ignore_index=True).reset_index(drop=True)
     amp_2 = amp_2.drop_duplicates(subset=[ITEM], keep='first').reset_index(drop=True)
+
     # Filter items left
     amp = amp[~amp[ITEM].isin(amp_2[ITEM])]
     data = data[~data[ITEM].isin(amp_2[ITEM])]
@@ -157,7 +163,7 @@ def filter_AMP_items(data: pd.DataFrame) -> list[pd.DataFrame]:
 
 ######################## Filter the AEB items #######################
 
-def filter_AEB_items(data):
+def filter_AEB_items(data: pd.DataFrame) -> list[pd.DataFrame]:
     """
     """
     # Filter items that are `Audio Enabled Book`
@@ -166,12 +172,12 @@ def filter_AEB_items(data):
     j_media = ["JFICTION*", "JMYSTERY*", "JSCIENCE*", "JSPORTS*",
                "J FICTION*", "J MYSTERY*", "J SCIENCE*", "J SPORTS*",]
     
-    c_media = ["EASY*", "READER*", "TWEEN*", "BOARD*",
+    c_media = ["EASY *", "READER*", "TWEEN*", "BOARD*",
                "J0.*", "J1.*", "J2.*", "J3.*", "J4.*", 
                "J5.*", "J6.*", "J7.*", "J8.*", "J9.*"]
     
     # Filter items belong to `AEB-J` fund
-    aeb_j = utils_fund.filter_items_by_keywords(aeb, CALLNUMBER, j_media)
+    aeb_j = aeb[aeb[CALLNUMBER].isin(j_media)]
 
     # Filter only left items
     data = data[~data[ITEM].isin(aeb_j[ITEM])]
@@ -179,7 +185,7 @@ def filter_AEB_items(data):
     aeb = aeb[~aeb[ITEM].isin(aeb_j[ITEM])]
 
     # Filter items belong to `AEB-C` fund
-    aeb_c = utils_fund.filter_items_by_keywords(aeb, CALLNUMBER, c_media)
+    aeb_c = aeb[aeb[CALLNUMBER].isin(c_media)]
 
     # Filter only left items
     data = data[~data[ITEM].isin(aeb_c[ITEM])]
@@ -189,7 +195,7 @@ def filter_AEB_items(data):
 
 ######################## Filter the CD-Rom items #######################
 
-def filter_CD_ROM_items(data):
+def filter_CD_ROM_items(data: pd.DataFrame) -> list[pd.DataFrame]:
     """
     This function is to filter all CR-Rom items
     """
@@ -202,8 +208,8 @@ def filter_CD_ROM_items(data):
     
     c_callnumber = ["EASY *", "READER*", "TWEEN*", "BOARD*"]
 
-    j_callnumber = ["JFICTION", "JMYSTERY", "JSCIENCE", "JSPORTS", "JMUSIC",
-                    "J FICTION", "J MYSTERY", "J SCIENCE", "J SPORTS",]
+    j_callnumber = ["JFICTION*", "JMYSTERY*", "JSCIENCE*", "JSPORTS*", "JMUSIC*",
+                    "J FICTION*", "J MYSTERY*", "J SCIENCE*", "J SPORTS*",]
     
     f_callnumber = ["YFICTION*", "YSCIENCE*",
                     "FICTION*", "MYST*", "SCIENCE FIC*", 
@@ -225,20 +231,17 @@ def filter_CD_ROM_items(data):
               "J5.*", "J6.*", "J7.*", "J8.*", "J9.*",]
     
     # Filter `AUD-C` items
-    aud_c = utils_fund.filter_items_by_keywords(cd_rom, CALLNUMBER, c_callnumber, 
-                                                Exceptional_keywords)
+    aud_c = cd_rom[cd_rom[CALLNUMBER].isin(c_callnumber)]
     cd_rom = cd_rom[~cd_rom[ITEM].isin(aud_c[ITEM])]
     data = data[~data[ITEM].isin(aud_c[ITEM])]
 
     # Filter `AUD-J` items
-    aud_j = utils_fund.filter_items_by_keywords(cd_rom, CALLNUMBER, j_callnumber, 
-                                                Exceptional_keywords)
+    aud_j = cd_rom[cd_rom[CALLNUMBER].isin(j_callnumber)]
     cd_rom = cd_rom[~cd_rom[ITEM].isin(aud_j[ITEM])]
     data = data[~data[ITEM].isin(aud_j[ITEM])]
 
     # Filter `AUD-F` items
-    aud_f = utils_fund.filter_items_by_keywords(cd_rom, CALLNUMBER, f_callnumber, 
-                                                Exceptional_keywords)
+    aud_f = cd_rom[cd_rom[CALLNUMBER].isin(f_callnumber)]
     cd_rom = cd_rom[~cd_rom[ITEM].isin(aud_f[ITEM])]
     data = data[~data[ITEM].isin(aud_f[ITEM])]
 
@@ -246,29 +249,28 @@ def filter_CD_ROM_items(data):
     cd_rom[Sub_callnumber] = utils_fund.split_string_value(cd_rom[CALLNUMBER])
 
     # Filter `AUD-1` items
-    aud_1 = utils_fund.filter_items_by_keywords(cd_rom, CALLNUMBER, callnumber_1, 
-                                                Exceptional_keywords)
+    aud_1 = cd_rom[cd_rom[CALLNUMBER].isin(callnumber_1)]
     aud_1_subset = utils_fund.filter_items_by_keywords(cd_rom, Sub_callnumber, callnumber_1, 
                                                 Exceptional_keywords)
     aud_1 = pd.concat([aud_1, aud_1_subset], ignore_index=True).reset_index(drop=True)
     aud_1 = aud_1.drop_duplicates(subset=[ITEM], keep='first').reset_index(drop=True)
+
     cd_rom = cd_rom[~cd_rom[ITEM].isin(aud_1[ITEM])]
     data = data[~data[ITEM].isin(aud_1[ITEM])]
 
     # Filter `AUD-2` items
-    aud_2 = utils_fund.filter_items_by_keywords(cd_rom, CALLNUMBER, callnumber_2, 
-                                                Exceptional_keywords)
+    aud_2 = cd_rom[cd_rom[CALLNUMBER].isin(callnumber_2)]
     aud_2_subset = utils_fund.filter_items_by_keywords(cd_rom, Sub_callnumber, callnumber_2, 
                                                 Exceptional_keywords)
     aud_2 = pd.concat([aud_2, aud_2_subset], ignore_index=True).reset_index(drop=True)
     aud_2 = aud_2.drop_duplicates(subset=[ITEM], keep='first').reset_index(drop=True)
+
     cd_rom = cd_rom[~cd_rom[ITEM].isin(aud_2[ITEM])]
     data = data[~data[ITEM].isin(aud_2[ITEM])]
 
     # Filter `JUVENILE NON-FICTION` items
     j_non_fiction = cd_rom[cd_rom[LOCATION].isin(["JUVENILE NON-FICTION"])]
-    j_non_fiction_subset = utils_fund.filter_items_by_keywords(cd_rom, CALLNUMBER, jnf_cd,
-                                                               Exceptional_keywords)
+    j_non_fiction_subset = cd_rom[cd_rom[CALLNUMBER].isin(jnf_cd)]
     j_non_fiction = pd.concat([j_non_fiction, j_non_fiction_subset], ignore_index=True).reset_index(drop=True)
     j_non_fiction = j_non_fiction.drop_duplicates(subset=[ITEM], keep='first').reset_index(drop=True)
     data = data[~data[ITEM].isin(j_non_fiction[ITEM])]
